@@ -1,0 +1,15 @@
+[
+    {
+        "ID": 4,
+        "code": "rree1000",
+        "price": 200,
+        "departureDate": "2016-01-20T00:00:00",
+        "origin": "MUA",
+        "destination": "CLE",
+        "emptySeats": 5,
+        "plane": {
+            "type": "Boeing 737",
+            "totalSeats": 150
+        }
+    }
+]

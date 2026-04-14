@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="ff6aabe5-52bc-40b7-9bc0-ac5d53205479" >
+		<http:listener-connection host="0.0.0.0" port="8083" />
+	</http:listener-config>
+	<flow name="books-flights-proc-apiFlow" doc:id="8ad1b501-5a6a-4dbd-b76c-7398f0149301" >
+		<http:listener doc:name="Listener" doc:id="bb2b60c9-5ffa-4723-b200-6914a030cdc1" config-ref="HTTP_Listener_config" path="/process/api/{ids}">
+			<http:response statusCode="#[vars.httpStatus]" />
+			<http:error-response statusCode="#[vars.httpStatus]" >
+				<http:body ><![CDATA[#[output application/json --- payload]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<ee:transform doc:name="Transform Message" doc:id="300c134f-109d-40aa-b10f-73ef27ddafb4" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="idValue" ><![CDATA[%dw 2.0
+output application/json
+---
+attributes.uriParams.ids]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<until-successful maxRetries="5" doc:name="Until Successful" doc:id="4c119c44-0a91-44db-9672-bc32a33cf8c1" >
+			<http:request doc:name="Request-american-flight" doc:id="ba99920f-1929-4efe-b5ca-905a4d2550fa" url="https://american-flights-sys-api-4vm87q.5sc6y6-1.usa-e2.cloudhub.io/api/flights/{id}" outputMimeType="application/json" target="flightDetail">
+			<ee:repeatable-file-store-stream bufferUnit="MB" />
+			<http:uri-params><![CDATA[#[output application/java
+---
+{
+	"id" : vars.idValue
+}]]]></http:uri-params>
+		</http:request>
+		</until-successful>
+		<logger level="INFO" doc:name="logger-american-flight" doc:id="44cecc96-9724-4bf3-9bf2-8d5b5d620691" message="#[vars.flightDetail]"/>
+		<http:request doc:name="Request-books-store" doc:id="f2c1f8c0-99d8-4819-9af6-2caba0f69336" url="http://localhost:8081/api/v1/books/{book_id}" target="bookDetail" responseTimeout="3000000">
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	"client-id" : "6f282a9ae3f147c68f6c88b844345a72",
+	"client-secret" : "16DC3fE22e964dD5ac80A93C06576D01"
+}]]]></http:headers>
+			<http:uri-params ><![CDATA[#[output application/java
+---
+{
+	book_id: vars.idValue
+}]]]></http:uri-params>
+		</http:request>
+		<logger level="INFO" doc:name="Logger-book-store" doc:id="43e9c83e-758e-43fd-b9c7-36fde7572216" message="#[payload]"/>
+		<ee:transform doc:name="Transform Message" doc:id="13bc8489-10da-4acd-bdb4-c97af3f263c6" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json 
+---
+{
+	(sheet1: vars.flightDetail) if !isEmpty(vars.flightDetail),
+	(sheet2: vars.bookDetail) if !isEmpty(vars.bookDetail)
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<http:request doc:name="Request" doc:id="612aa31b-ced7-446e-bb24-e349b73f71cd" url="http://localhost:8082/files" method="POST"/>
+	</flow>
+</mule>

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<configuration doc:name="Configuration" doc:id="f1bbcfca-49c4-466e-93b6-ea1e977ba4a0" defaultErrorHandler-ref="Global-error-handlerError_Handler" />
+	<error-handler name="Global-error-handlerError_Handler" doc:id="b0abdcb1-785b-4b8f-873c-ed7e70b81b6d" >
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="96f9b045-c6ec-484d-a6c9-deab7af8d9f8" type="HTTP:CLIENT_SECURITY, HTTP:CONNECTIVITY, HTTP:FORBIDDEN, HTTP:GATEWAY_TIMEOUT,  HTTP:SERVICE_UNAVAILABLE, HTTP:TIMEOUT, HTTP:BAD_GATEWAY">
+			<ee:transform doc:name="Transform Message" doc:id="30ec6cd6-eb9d-4230-9e83-b70ac8fd29b2" >
+				<ee:message >
+					<ee:set-payload resource="dwl/error-response.dwl" />
+				</ee:message>
+				<ee:variables >
+					<ee:set-variable variableName="httpStatus" ><![CDATA[%dw 2.0
+output application/java
+---
+502]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+		</on-error-propagate>
+		<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="c8d480a6-39a8-4fd5-93de-f094af7cb7b7" type="HTTP:BAD_REQUEST, HTTP:TOO_MANY_REQUESTS, EXPRESSION">
+			<ee:transform doc:name="Transform Message" doc:id="88171b6d-c745-48ce-b0d9-61239b853144" >
+				<ee:message >
+					<ee:set-payload resource="dwl/error-response.dwl" />
+				</ee:message>
+				<ee:variables >
+					<ee:set-variable variableName="httpStatus" ><![CDATA[%dw 2.0
+output application/java
+---
+400]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+		</on-error-continue>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="e9c862d1-580e-4968-b86a-af08b2fc7cdd" type="ANY">
+			<ee:transform doc:name="Transform Message" doc:id="69b69b58-462d-4f0d-8b91-0b29c338b417" >
+				<ee:message >
+					<ee:set-payload resource="dwl/error-response.dwl" />
+				</ee:message>
+				<ee:variables >
+					<ee:set-variable variableName="httpStatus" ><![CDATA[%dw 2.0
+output application/java
+---
+500]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+		</on-error-propagate>
+	</error-handler>
+</mule>

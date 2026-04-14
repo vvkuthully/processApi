@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="books-flights-proc-api-test-suite.xml" />
+	<munit:test name="books-flights-proc-api-test-suite-books-flights-proc-apiFlowTest" doc:id="c66c7d0e-7841-4b2f-a583-dcd86c537df9" description="Test">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="httpreq-american flights" doc:id="e8cdfd06-0041-4432-8cf5-dae143c4781f" processor="http:request">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="Request-american-flight" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[readUrl('classpath://american-flights-response.json', 'application/json')]" mediaType="application/json" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="httpreq-bookstore-db" doc:id="04b27126-f714-4f70-b44d-ec4cf7b698b2" processor="http:request">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="Request-books-store" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[readUrl('classpath://bookstore-response.json', 'application/json')]" mediaType="application/json" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="httpreq-file" doc:id="d84d3e13-8747-4fdc-8525-6117c19cc8b3" processor="http:request">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="Request" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="dc19577a-870c-4ad0-b86a-6ea76c38f844" >
+				<munit:attributes value='#[{&#10;	"uriParams":&#10;	{&#10;		"ids":4&#10;	}&#10;	&#10;}]' />
+			</munit:set-event>
+			<flow-ref doc:name="Flow-ref to books-flights-proc-apiFlow" doc:id="0ebc8b30-7abb-4dcd-990d-aef00d6ae698" name="books-flights-proc-apiFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="3a68a7ac-5a63-49b5-85da-5cc4fca891b9" actual="#[payload]" expected='#[output application/json&#10;---&#10;{}]' message="Payload does not match"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="books-flights-proc-api-test-suite-books-flights-proc-apiFlowTest-errorCase" doc:id="2eed7a8a-aa2c-4e2c-8f7c-73d6407d0e04" description="Test" expectedErrorType="HTTP:CONNECTIVITY">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="httpreq-american flights" doc:id="04657502-64b4-4888-9cbe-bad7e49198c0" processor="http:request">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="Request-american-flight" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[readUrl('classpath://american-flights-response.json', 'application/json')]" mediaType="application/json" />
+					<munit-tools:error typeId="HTTP:CONNECTIVITY" />
+				</munit-tools:then-return>
+			
+</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="ba6998c9-6d80-4ea7-835f-24ac53a260e0" >
+				<munit:attributes value='#[{&#10;	"uriParams":&#10;	{&#10;		"ids":4&#10;	}&#10;	&#10;}]' />
+			</munit:set-event>
+			<flow-ref doc:name="Flow-ref to books-flights-proc-apiFlow" doc:id="146c8c78-16fa-4a4a-9d13-8cc64fa1f6c3" name="books-flights-proc-apiFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="f71bfad4-9b5b-4c34-bdb0-c7959f2d8301" actual="#[payload]" expected='#[output application/json&#10;---&#10;{}]' message="Payload does not match"/>
+		</munit:validation>
+	</munit:test>
+
+
+</mule>
